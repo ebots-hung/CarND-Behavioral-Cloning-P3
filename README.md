@@ -127,3 +127,4 @@ A well written README file can enhance your project and portfolio.  Develop your
     RUN_GRAPH=true /home/hunglam/learning/CarND/term1-simulator-linux/beta_simulator_linux/beta_simulator.x86_64
 
 ### Troubleshotting reference
+    https://github.com/udacity/self-driving-car-sim/issues/131
