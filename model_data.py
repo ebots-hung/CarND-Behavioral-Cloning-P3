@@ -6,49 +6,50 @@ import math
 import datetime
 import numpy as np
 import tensorflow as tf
+import random
 import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 
 _cnn_driving_log_file = [
-    './train_data/CCW_data_1lap/driving_log.csv',   
-    './train_data/Recovery_left/driving_log.csv', 
+    './train_data/CCW_data_1lap_1/driving_log.csv',  
+    './train_data/CCW_data_1lap_2/driving_log.csv',   
+    './train_data/Recovery_left_1/driving_log.csv', 
+    './train_data/Recovery_left_2/driving_log.csv', 
     './train_data/Recovery_right_1/driving_log.csv',
     './train_data/Recovery_right_2/driving_log.csv',
     './train_data/Recovery_right_3/driving_log.csv',
     './train_data/Smooth_corner_leftturn_1/driving_log.csv', 
     './train_data/Smooth_corner_leftturn_2/driving_log.csv',
     './train_data/Smooth_corner_leftturn_3/driving_log.csv', 
-    './train_data/Smooth_corner_leftturn_4/driving_log.csv',         
+    './train_data/Smooth_corner_leftturn_4/driving_log.csv',
+    './train_data/Smooth_corner_leftturn_5/driving_log.csv',
+    # './train_data/Smooth_corner_leftturn_6/driving_log.csv',  
+    # './train_data/Smooth_corner_leftturn_7/driving_log.csv',       
     './train_data/Smooth_corner_turnright_1/driving_log.csv', 
     './train_data/Smooth_corner_turnright_2/driving_log.csv',
     ]
+    
 _cnn_driving_folderpath = [
-    './train_data/CCW_data_1lap/IMG/',
-    './train_data/Recovery_left/IMG/', 
+    './train_data/CCW_data_1lap_1/IMG/',
+    './train_data/CCW_data_1lap_2/IMG/',
+    './train_data/Recovery_left_1/IMG/', 
+    './train_data/Recovery_left_2/IMG/', 
     './train_data/Recovery_right_1/IMG/', 
     './train_data/Recovery_right_2/IMG/', 
     './train_data/Recovery_right_3/IMG/',     
     './train_data/Smooth_corner_leftturn_1/IMG/', 
     './train_data/Smooth_corner_leftturn_2/IMG/',
     './train_data/Smooth_corner_leftturn_3/IMG/',   
-    './train_data/Smooth_corner_leftturn_4/IMG/',    
+    './train_data/Smooth_corner_leftturn_4/IMG/',
+    './train_data/Smooth_corner_leftturn_5/IMG/',
+    # './train_data/Smooth_corner_leftturn_6/IMG/',   
+    # './train_data/Smooth_corner_leftturn_7/IMG/',  
     './train_data/Smooth_corner_turnright_1/IMG/', 
     './train_data/Smooth_corner_turnright_2/IMG/',
     ]
 
-# _cnn_driving_log_file = ['./train_data/CCW_data_3laps/driving_log.csv','./train_data/CW_smooth_corner/driving_log.csv', './train_data/Recovery_data/driving_log.csv', './train_data/Recovery_data_new/driving_log.csv', './train_data/Recovery_data_corner/driving_log.csv', './train_data/Recovery_left/driving_log.csv', './train_data/Recovery_right/driving_log.csv']
-# _cnn_driving_folderpath = ['./train_data/CCW_data_3laps/IMG/','./train_data/CW_smooth_corner/IMG/', './train_data/Recovery_data/IMG/', './train_data/Recovery_data_new/IMG/', './train_data/Recovery_data_corner/IMG/','./train_data/Recovery_left/IMG/', './train_data/Recovery_right/IMG/']
-
-# _cnn_driving_log_file = ['./train_data/CCW_data/driving_log.csv', './train_data/CW_smooth_corner/driving_log.csv', './train_data/Recovery_data/driving_log.csv', './train_data/Recovery_data_new/driving_log.csv', './train_data/Recovery_data_corner/driving_log.csv', './train_data/Recovery_left/driving_log.csv', './train_data/Recovery_right/driving_log.csv']
-# _cnn_driving_folderpath = ['./train_data/CCW_data/IMG/', './train_data/CW_smooth_corner/IMG/', './train_data/Recovery_data/IMG/', './train_data/Recovery_data_new/IMG/', './train_data/Recovery_data_corner/IMG/','./train_data/Recovery_left/IMG/', './train_data/Recovery_right/IMG/']
-
-# _cnn_driving_log_file = [ './train_data/Recovery_left/driving_log.csv', './train_data/Recovery_right/driving_log.csv']
-# _cnn_driving_folderpath = [ './train_data/Recovery_left/IMG/', './train_data/Recovery_right/IMG/']
-
 _cnn_input_shape = (160,320,3)
-_cnn_dropout_ratio = 0.5
-_cnn_batch_size = 32
 _cnn_lines = []
 _cnn_nb_lines = []
 
@@ -62,6 +63,35 @@ def _cnn_image_aug(img, steering_meas):
     steering_flipped = -steering_meas
     return img_flipped, steering_flipped
 
+def exploreData(savename, images, labels):
+    imgLength = len(images)
+    assert(imgLength == len(labels))  
+    
+    index = random.randint(0, imgLength)
+    print(index)
+    image = images[index]
+    lable = labels[index]
+    print("lable:", lable)
+    filepath = os.path.join(savename + '_' + str(lable) + '_bgr.png')
+    print(filepath)
+    cv2.imwrite(filepath, image)
+    filepath = os.path.join(savename + '_' + str(lable) + '_yuv.png')
+    print(filepath)
+    cv2.imwrite(filepath, cv2.cvtColor(image,cv2.COLOR_BGR2YUV))
+    
+    img_gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
+    filepath = os.path.join(savename + '_' + str(lable) + '_gray.png')
+    print(filepath)
+    cv2.imwrite(filepath, img_gray)
+    
+    img_rgb = cv2.cvtColor(img_gray,cv2.COLOR_GRAY2RGB)
+    filepath = os.path.join(savename + '_' + str(lable) + '_rgb.png')
+    print(filepath)
+
+    cv2.imwrite(filepath, img_rgb)
+    print("brg shape:",image.shape)
+    print("grayscale shape:",img_gray.shape)
+    print("img_rgb shape:",img_rgb.shape)
 
 if __name__ == '__main__': 
 
@@ -88,7 +118,7 @@ if __name__ == '__main__':
     # print('len of validation_samples is', len(_cnn_validation_samples))
 
     # batch_size = 32
-    correction = 0.11 # this is a parameter to tune
+    correction = 0.2 # this is a parameter to tune
     # def _cnn_generator(samples, batch_size=32):
     num_samples = len(_cnn_lines)  
     # while 1: # Loop forever so the generator never terminates
@@ -107,11 +137,11 @@ if __name__ == '__main__':
             # print(center_name)
             ### read image
             center_image = cv2.imread(center_name)
-            center_image = cv2.cvtColor(center_image, cv2.COLOR_RGB2YUV)
+            # center_image = cv2.cvtColor(center_image, cv2.COLOR_RGB2YUV)
             left_image = cv2.imread(left_name)
-            left_image = cv2.cvtColor(left_image, cv2.COLOR_RGB2YUV)
+            # left_image = cv2.cvtColor(left_image, cv2.COLOR_RGB2YUV)
             right_image = cv2.imread(right_name)
-            right_image = cv2.cvtColor(right_image, cv2.COLOR_RGB2YUV)
+            # right_image = cv2.cvtColor(right_image, cv2.COLOR_RGB2YUV)
             ### read measured angle
             center_angle = float(batch_sample[3])
             left_angle = center_angle + correction  
@@ -142,8 +172,79 @@ if __name__ == '__main__':
     print("len of X_train: {} and y_train: {}", len(X_train), len(y_train))
         # yield sklearn.utils.shuffle(X_train, y_train)
             
+    # 'Plot X_data'
+    img_path = os.getcwd()+'/'+'trained_image'
+    exploreData(img_path, X_train, y_train)
 
-    'Angles Distribution'
+    # 'Plot right corner image'
+    img_file = os.getcwd() + '/train_data/Smooth_corner_leftturn_1/IMG/' + 'center_2021_07_20_00_27_30_739.jpg'
+    # print(img_file)
+    plt_img = cv2.imread(img_file)
+    # print(plt_img.shape)
+    save_file = 'smooth_corner_leftturn_img'
+    cv2.imwrite(save_file+'_bgr.png', plt_img)
+    cv2.imwrite(save_file+'_rgb.png', cv2.cvtColor(plt_img, cv2.COLOR_BGR2RGB))
+
+    filepath = os.path.join(save_file + '_yuv.png')
+    # print(filepath)
+    cv2.imwrite(filepath, cv2.cvtColor(plt_img,cv2.COLOR_BGR2YUV))
+    
+    filepath = os.path.join(save_file + '_gray.png')      
+    img_gray = cv2.cvtColor(plt_img,cv2.COLOR_BGR2GRAY)
+    img_rgb = cv2.cvtColor(img_gray,cv2.COLOR_GRAY2RGB)
+    cv2.imwrite(filepath, img_rgb)
+
+    ### 'Plot recovery left/right image'
+    ### left
+    img_file = os.getcwd() + '/train_data/Recovery_left_1/IMG/' + 'center_2021_07_17_16_33_41_832.jpg'
+    # print(img_file)
+    plt_img = cv2.imread(img_file)
+    # print(plt_img.shape)
+    save_file = 'recovery_left_img'
+    cv2.imwrite(save_file+'_bgr.png', plt_img)
+    cv2.imwrite(save_file+'_rgb.png', cv2.cvtColor(plt_img, cv2.COLOR_BGR2RGB))
+
+    filepath = os.path.join(save_file + '_yuv.png')
+    # print(filepath)
+    cv2.imwrite(filepath, cv2.cvtColor(plt_img,cv2.COLOR_BGR2YUV))
+    
+    filepath = os.path.join(save_file + '_gray.png')      
+    img_gray = cv2.cvtColor(plt_img,cv2.COLOR_BGR2GRAY)
+    img_rgb = cv2.cvtColor(img_gray,cv2.COLOR_GRAY2RGB)
+    cv2.imwrite(filepath, img_rgb)
+
+    ### right
+    img_file = os.getcwd() + '/train_data/Recovery_right_1/IMG/' + 'center_2021_07_17_16_31_08_770.jpg'
+    # print(img_file)
+    plt_img = cv2.imread(img_file)
+    # print(plt_img.shape)
+    save_file = 'recovery_right_img'
+    cv2.imwrite(save_file+'_bgr.png', plt_img)
+    cv2.imwrite(save_file+'_rgb.png', cv2.cvtColor(plt_img, cv2.COLOR_BGR2RGB))
+
+    filepath = os.path.join(save_file + '_yuv.png')
+    # print(filepath)
+    cv2.imwrite(filepath, cv2.cvtColor(plt_img,cv2.COLOR_BGR2YUV))
+    
+    filepath = os.path.join(save_file + '_gray.png')      
+    img_gray = cv2.cvtColor(plt_img,cv2.COLOR_BGR2GRAY)
+    img_rgb = cv2.cvtColor(img_gray,cv2.COLOR_GRAY2RGB)
+    cv2.imwrite(filepath, img_rgb)
+
+
+    ### 'Plot cropping image'
+    img_file = os.getcwd() + '/train_data/Recovery_left_1/IMG/' + 'center_2021_07_17_16_33_41_832.jpg'
+    # print(img_file)
+    plt_img = cv2.imread(img_file)
+    top_crop = 50
+    bot_crop = 20
+    crop_img = plt_img[top_crop:160-bot_crop, 0:320]
+    save_file = 'cropped_img_50_20'
+    cv2.imwrite(save_file+'_bgr.png', crop_img)
+    cv2.imwrite(save_file+'_rgb.png', cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB))
+
+    # print(filepath)    
+    # 'Angles Distribution'
     num_bins = 20
     bins = (np.arange(num_bins+2)-(num_bins+1)/2)/10
     x_label = (np.arange(num_bins+1)-num_bins/2)/10
